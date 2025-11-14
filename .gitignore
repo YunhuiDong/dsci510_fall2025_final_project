@@ -4,3 +4,7 @@ results/
 kaggle.json
 __pycache__/
 .ipynb_checkpoints/
+data/*
+results/*
+!data/.gitkeep
+!results/.gitkeep

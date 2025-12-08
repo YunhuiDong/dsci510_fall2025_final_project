@@ -1,72 +1,112 @@
 # Ethereum Weekly Volatility Prediction Using Market,Sentiment, and On-chain Data
-This project aims to predict Ethereum weekly volatility in the short term utilizing real-time Ethereum information from the Yahoo Finance API and Ethereum on-chain data from the Etherscan API, together with the Kaggle dataset that include sentiment indicators. Based on the information and dataset, a machine learning classification model will be generated to determine whether the following week’s Ethereum’s closing price will rise or fall. The model will apply preprocessing and data cleaning, feature engineering, and evaluation and visualization. This project illustrates how market sentiment and network usage dynamics work together to influence Ethereum volatility movement.
+---
+## ● Introduction
+This project focuses on predicting Ethereum weekly volatility in the short term. By combining market data (ETH price from Yahoo Finance), investor sentiment (Fear & Greed Index), and on-chain usage metrics (Ethereum transaction fees) over the past 500 days, we develop models to predict whether Ethereum’s price will increase in the following seven days.
+The prediction task is formulated as a binary classification problem, where:
+- `1` indicates the price increases in the next 7 days,
+- `0` indicates the price does not increase.
+Though visualization and statistical analysis, the project aims to identify the most influential factors behind price movements, understand the relationships between sentiment, network activity, and market behavior, and evaluate how effectively machine learning models can capture these patterns.
+---
+## ● Data Sources
+| Dataset | Type | Description | Purpose |
+|--------|------|-------------|---------|
+| ETH price from Yahoo Finance | API Call | Daily Ethereum price data, including Open, High, Low, Close, and Volume | Capture market behavior |
+| Fear & Greed Index from CoinMarketCap | API Call | Daily market sentiment index | Quantify investor sentiment |
+| Ethereum transaction fees from DefiLlama | API Call | Daily total Ethereum transaction fees | Represent on-chain activity and network usage |
 
-# Data sources
-1. Yahoo Finance API (ETH–USD)
+**Date Range:** Most recent 500 days  
+**Final usable weekly samples:** 485 rows
+---
+## ● Analysis
+The following types of analysis were performed in this project:
 
-Used to obtain daily ETH market data.
-Fields: Open, High, Low, Close, Adj Close, Volume
-Format: CSV (downloaded via yfinance)
-Used in: weekly volatility, weekly returns, weekly volume
+- **Exploratory Data Analysis (EDA):**
+  - Price trend visualization
+  - Fear & Greed sentiment cycles
+  - On-chain transaction fee fluctuations
+  - Distribution of daily returns
+  - Correlation heatmap of engineered features
 
-2. Crypto Fear & Greed Index (Kaggle Dataset)
+- **Feature Engineering:**
+  - Daily return and weekly return labels
+  - Moving averages (7-day)
+  - Volatility measures
+  - Changes in sentiment and transaction fees
 
-Included as a future extension.
-Fields: date, fng_value, classification
-Format: CSV
-Note: Requires Kaggle API configuration.
+- **Modeling:**
+  - Logistic Regression for baseline interpretable classification
+  - Random Forest for capturing nonlinear feature interactions
 
-# Results 
-The pipeline generates several weekly-level metrics:
+- **Model Evaluation:**
+  - Confusion matrix
+  - Classification report (precision, recall, F1-score)
+  - Feature importance analysis
+  - Predicted probability distribution
+  - True vs predicted timeline comparison
 
-- **weekly_volatility** – standard deviation of daily returns  
-- **weekly_return_mean** – average daily return  
-- **weekly_volume_sum** – total volume per week  
-- **close_last** – final weekly closing price  
+---
+## ● Summary of the Results
+- Logistic Regression achieved better overall accuracy but struggled to correctly identify “up” weeks.
+- Random Forest captured nonlinear relationships but showed weaker generalization.
+- On-chain activity and sentiment indicators ranked among the most important predictive features.
+- Weekly ETH price prediction remains highly challenging due to:
+  - High volatility
+  - Noisy short-term signals
+  - Limited dataset size after weekly labeling
+---
+## ● How to Run
 
-Visualizations stored in `results/` include:
-- Histogram of weekly closing prices  
-- Scatter plot of weekly volatility vs. closing price  
+### 1. Install Required Packages
 
-# Installation
-## Kaggle API:
-```bash
-KAGGLE_CONFIG_DIR="/Users/yunhuidong/Desktop/dsci510_fall2025_final_project/data"
-```
+Make sure you have Python 3.8+ installed, then install dependencies:
 
-## Etherscan API:
-```bash
-ETHERSCAN_API_KEY="YOUR_KEY"
-```
-
-## Python Dependencies
-Install with:
 ```bash
 pip install -r requirements.txt
 ```
+Required libraries include:
 
-Dependencies include:
-- yfinance  
-- pandas  
-- matplotlib  
-- requests  
-- python-dotenv  
-- pytest  
+- pandas
+- numpy
+- requests
+- yfinance
+- scikit-learn
+- python-dotenv
+- matplotlib
 
-# Running analysis 
-## Run main pipeline
-From project root:
+### 2. Create a .env File for API Keys
+Create an account and get an api from this website: https://coinmarketcap.com/charts/fear-and-greed-index/
+Create a file named .env in the project root directory:
 ```bash
-python src/main.py
+touch .env
 ```
+Inside .env, add the following:
+```env
+GREED_FEAR_INDEX_API_KEY = "your_api_key"
+```
+### 3. Run the Data Collection, Preprocessing Pipeline, Model Training, and Evaluation
+From the `src/` directory, run:
 
-Outputs:
-- Data saved to `data/`
-- Plots saved to `results/`
-
-## Run tests
 ```bash
-python -m pytest src/tests.py
+python main.py
 ```
+This will:
 
-This validates that the Yahoo Finance API successfully retrieves ETH data.
+- Download ETH price data from Yahoo Finance.
+- Fetch Fear & Greed Index values from CoinMarketCap.
+- Fetch Ethereum transaction fees from DefiLlama.
+- Merge all datasets by date.
+- Perform feature engineering.
+- Generate prediction labels.
+- Train Logistic Regression and Random Forest models.
+- Output classification reports and confusion matrices.
+- Generate feature importance and probability distribution plots.
+- Save figures to the `results/` directory.
+
+### 4. View Results
+
+- Clean datasets are stored in `./data/`.
+- Visualizations are stored in `./results/`.
+- Model performance metrics are printed directly in the terminal.
+
+
+

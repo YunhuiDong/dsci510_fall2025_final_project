@@ -1,25 +1,30 @@
-# src/main.py
-from config import DATA_DIR, RESULTS_DIR
-from load import get_yahoo_eth_data   # ← 不再导入 get_fng_kaggle_data
-from analyze import plot_statistics
-from process import build_weekly_dataset
+from config import DATA_DIR, RESULTS_DIR, GREED_URL, FEES_URL
+from load import get_yahoo_eth_data, get_fear_greed_data, get_daily_fees_data
+from analyze import eda_plot, model_plot
+from process import merge_data, clean_data_and_feature_engineering, modeling
 
 
 if __name__ == "__main__":
-    # Ensure the directory exists
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
-    #1 Get ETH daily data from Yahoo Finance API
-    csv_path = get_yahoo_eth_data()
-    print("\n" + "=" * 50 + "\n")
+    # We will use Yahoo Finance daily ETH data
+    get_yahoo_eth_data()
 
-    #2 Create weekly-feature dataset
-    weekly_df = build_weekly_dataset(include_fng=True)
-    print("\nWeekly ETH dataset head:")
-    print(weekly_df.head())
+    # We will use Fear & Greed Index data from CoinMarketCap
+    get_fear_greed_data(GREED_URL)
 
-    #3 Plot and save in the result directory
-    plot_statistics(weekly_df.dropna(), "ETH_Weekly", result_dir=str(RESULTS_DIR))
+    # We will use Daily Fees data from DefiLlama
+    get_daily_fees_data(FEES_URL)
 
-    print("\n--- ETH data pipeline complete. Check 'data/' and 'results/' ---")
+    # Merge the above three datasets into one dataset
+    merge_data()
+
+    # Do data cleaning and feature engineering
+    clean_data_and_feature_engineering()
+
+    # Train the data and get the model
+    modeling()
+
+    # Plot and save in the result directory
+    eda_plot()
+    model_plot()
+

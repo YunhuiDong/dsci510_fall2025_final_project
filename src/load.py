@@ -1,103 +1,78 @@
-import pandas as pd
+import requests
 import yfinance as yf
-from pathlib import Path
+import json
+import pandas as pd
+from datetime import date, timedelta
 from dotenv import load_dotenv
 import os
 
-from config import (
-    DATA_DIR,
-    YAHOO_ETH_TICKER,
-    FNG_KAGGLE_SLUG,
-    ETHERSCAN_BASE_URL,
-    ETHERSCAN_API_ENV,
-)
-
-
 
 #1 Get Yahoo Finance daily ETH data
-def get_yahoo_eth_data(period: str = "3y", interval: str = "1d") -> str:
-    print(f"--- Loading ETH data from Yahoo Finance ({YAHOO_ETH_TICKER}) ---")
-
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-
-    df = yf.download(YAHOO_ETH_TICKER, period=period, interval=interval)
-    if df.empty:
-        print("Warning: downloaded DataFrame is empty.")
-
-    csv_path = DATA_DIR / "eth_yahoo.csv"
-    df.to_csv(csv_path, index_label="Date")
-    print(f"Saved Yahoo Finance data to {csv_path}")
-    return str(csv_path)
-
-
-
-#2 Get Kaggle Fear & Greed Index data
-def get_fng_kaggle_data(extract_dir: Path | None = None) -> str | None:
-    print(f"--- Loading Fear & Greed Index from Kaggle: {FNG_KAGGLE_SLUG} ---")
-
+def get_yahoo_eth_data():
     try:
-        import kaggle
-    except ImportError:
-        print("kaggle package is not installed. Skipping Kaggle download.")
-        return None
-
-    if extract_dir is None:
-        extract_dir = DATA_DIR / "fng_raw"
-    extract_dir = Path(extract_dir)
-    extract_dir.mkdir(parents=True, exist_ok=True)
-
-    try:
-        kaggle.api.dataset_download_files(
-            FNG_KAGGLE_SLUG, path=str(extract_dir), unzip=True
-        )
-    except OSError as e:
-        print(f"Kaggle authentication error: {e}")
-        print("Please check KAGGLE_CONFIG_DIR and kaggle.json. Skipping Kaggle download.")
+        start_date = (date.today() - timedelta(days=500)).strftime("%Y-%m-%d")
+        eth = yf.download("ETH-USD", start=start_date)
+        eth.to_json("./data/eth_price.json", orient="records", indent=4)
+        print("Yahoo ETH data loaded successfully.")
         return None
     except Exception as e:
-        print(f"Error downloading Kaggle dataset: {e}")
+        print(f"Error loading daily ETH data from Yahoo Finance: {e}")
         return None
 
-    csv_files = [p for p in extract_dir.iterdir() if p.suffix.lower() == ".csv"]
-    if not csv_files:
-        print("No CSV file found in Kaggle extract directory.")
+
+
+#2 Get Fear & Greed Index data
+def get_fear_greed_data(url):
+    try:
+        greed_api_key = os.getenv("GREED_FEAR_INDEX_API_KEY")
+        greed_url = url
+
+        params = {
+            "limit": 500
+        }
+
+        headers = {
+            "X-CMC_PRO_API_KEY": greed_api_key
+        }
+
+        response = requests.get(greed_url, params=params, headers=headers)
+        data = response.json()
+        with open("./data/fear_greed_data.json", "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+        print("Fear & Greed Index data loaded successfully.")
+        return None
+    except Exception as e:
+        print(f"Error loading fear and greed data from CoinMarketCap: {e}")
         return None
 
-    raw_path = csv_files[0]
-    print(f"Loading Kaggle CSV: {raw_path}")
-    df = pd.read_csv(raw_path)
 
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = DATA_DIR / "fng_index.csv"
-    df.to_csv(out_path, index=False)
-    print(f"Saved Fear & Greed data to {out_path}")
-    return str(out_path)
+#3 Get Daily Fees data
+def get_daily_fees_data(url):
+    try:
+        fees_url = url
+
+        response = requests.get(fees_url)
+        data = response.json()
+
+        with open("./data/eth_fees_raw.json", "w") as f:
+            json.dump(data, f, indent=4)
 
 
-#3 Get Etherscan
-def get_etherscan_gas_oracle() -> str:
-    import requests
+        with open("./data/eth_fees_raw.json", "r") as f:
+            data = json.load(f)
 
-    print("--- Loading gas oracle from Etherscan API ---")
+        points = data["totalDataChart"]
+        df = pd.DataFrame(points, columns=["timestamp", "fee"])
+        df["date"] = pd.to_datetime(df["timestamp"], unit="s")
+        df = df.sort_values("date")
+        df_500 = df.iloc[-500:].reset_index(drop=True)
 
-    load_dotenv()
-    api_key = os.getenv(ETHERSCAN_API_ENV)
-    if not api_key:
-        raise ValueError("ETHERSCAN_API_KEY not set in .env")
+        small = df_500[["timestamp", "fee"]].values.tolist()
+        with open("./data/eth_fees_500days.json", "w") as f:
+            json.dump(small, f, indent=2)
+        print("Daily fees data loaded successfully.")
+        return None
+    except Exception as e:
+        print(f"Error loading daily fees data from DefiLlama: {e}")
+        return None    
 
-    params = {
-        "module": "gastracker",
-        "action": "gasoracle",
-        "apikey": api_key,
-    }
-
-    resp = requests.get(ETHERSCAN_BASE_URL, params=params)
-    resp.raise_for_status()
-
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    json_path = DATA_DIR / "etherscan_gas_oracle.json"
-    with open(json_path, "w") as f:
-        f.write(resp.text)
-
-    print(f"Saved Etherscan gas oracle data to {json_path}")
-    return str(json_path)

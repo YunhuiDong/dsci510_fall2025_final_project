@@ -15,13 +15,6 @@ if env_path.exists():
 DATA_DIR = BASE_DIR / "data"
 RESULTS_DIR = BASE_DIR / "results"
 
-
-# 1 Yahoo Finance
-YAHOO_ETH_TICKER = "ETH-USD"
-
-# 2 Kaggle Crypto Fear & Greed Index
-FNG_KAGGLE_SLUG = "liiucbs/crypto-fear-and-greed-index"
-
-# 3 Etherscan
-ETHERSCAN_BASE_URL = "https://api.etherscan.io/api"
-ETHERSCAN_API_ENV = "ETHERSCAN_API_KEY" 
+# data sources configuration
+GREED_URL = "https://pro-api.coinmarketcap.com/v3/fear-and-greed/historical"
+FEES_URL = "https://api.llama.fi/overview/fees/Ethereum?excludeTotalDataChart=false"

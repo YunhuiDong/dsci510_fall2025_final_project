@@ -2,5 +2,6 @@ yfinance
 pandas
 requests
 python-dotenv
-kaggle
 matplotlib
+scikit-learn
+python-dotenv

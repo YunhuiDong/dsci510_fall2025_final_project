@@ -75,7 +75,7 @@ Required libraries include:
 
 ### 2. Create a .env File for API Keys
 Create an account and get an api from this website: https://coinmarketcap.com/charts/fear-and-greed-index/
-Create a file named .env in the project root directory:
+Create a file named .env in the project src directory:
 ```bash
 touch .env
 ```
@@ -84,7 +84,7 @@ Inside .env, add the following:
 GREED_FEAR_INDEX_API_KEY = "your_api_key"
 ```
 ### 3. Run the Data Collection, Preprocessing Pipeline, Model Training, and Evaluation
-From the `src/` directory, run:
+From the root directory, run:
 
 ```bash
 python main.py
@@ -95,6 +95,7 @@ This will:
 - Fetch Fear & Greed Index values from CoinMarketCap.
 - Fetch Ethereum transaction fees from DefiLlama.
 - Merge all datasets by date.
+- Save datasets to the `data/` directory.
 - Perform feature engineering.
 - Generate prediction labels.
 - Train Logistic Regression and Random Forest models.
@@ -108,5 +109,19 @@ This will:
 - Visualizations are stored in `./results/`.
 - Model performance metrics are printed directly in the terminal.
 
+---
+## ● In Addition
+### 1. Run Jupyter Notebook
+From the root directory, run:
 
+```bash
+python results.ipynb
+```
 
+### 2. Run Testing
+From the root directory, run:
+
+```bash
+python tests.ipynb
+```
+It will test most key functions of this project.
